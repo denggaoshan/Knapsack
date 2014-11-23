@@ -16,7 +16,9 @@ public:
 	bitset<N_OF_ITEMS> data;
 
 	static uint *weights;
+	static uint *values;
 	static int   mutation_prob;
+	static uint  capacity;
 	Chromosome(){
 		for(size_t i = 0; i < N_OF_ITEMS; i++)
 			data[i] = rand() % 2;
@@ -26,10 +28,17 @@ public:
 		this->data = data;
 	}
 
-	uint fitness() const{
-		uint result = 0;
-		for(size_t i = 0 ; i < N_OF_ITEMS; i++)
-			result += weights[i] * data[i];
+	int fitness() const{
+		int  result  = 0;
+		uint weight = 0;
+		for(size_t i = 0 ; i < N_OF_ITEMS; i++){
+			result += values[i] * data[i];
+			weight += weights[i] * data[i];
+			if(weight > capacity){
+				result = -1;
+				break;
+			}
+		}
 		return result;
 	}
 
@@ -87,6 +96,13 @@ static uint* init_weights(){
 	return weights;
 }
 
+static uint* init_values(){
+	uint *values = new uint[N_OF_ITEMS];
+	for(size_t i = 0; i < N_OF_ITEMS; i++)
+		values[i] = i;
+	return values;
+}
+
 
 void next_generation(vector <Chromosome> &population){
 	vector <Chromosome> new_population;
@@ -110,7 +126,10 @@ Chromosome find_best(vector <Chromosome> &population){
 }
 
 int   Chromosome::mutation_prob = 2;
-uint *Chromosome::weights = init_weights();
+uint  Chromosome::capacity = 2000;
+uint *Chromosome::weights  = init_weights();
+uint *Chromosome::values   = init_values();
+
 
 int main(){
 	srand(time(NULL));
@@ -143,5 +162,6 @@ int main(){
 	best.print();
 
 	delete[] Chromosome::weights;
+	delete[] Chromosome::values;
 	return 0;
 }
