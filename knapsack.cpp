@@ -3,7 +3,7 @@
 #include <bitset>
 #include <tuple>
 
-#define N_OF_ITEMS 50
+#define N_OF_ITEMS 300
 
 using namespace std;
 
@@ -44,7 +44,7 @@ public:
 
 	void mutate(){
 		for(uint i = 0 ; i < N_OF_ITEMS; i++){
-			if(rand() % 100 < mutation_prob)
+			if(rand() % (population_size * 100) < population_size)
 				data.flip(i);
 		}
 	}
@@ -92,14 +92,14 @@ crossover(vector <Chromosome> &population)
 static uint* init_weights(){
 	uint *weights = new uint[N_OF_ITEMS];
 	for(size_t i = 0; i < N_OF_ITEMS; i++)
-		weights[i] = 2 * i + 1;
+		weights[i] = (97 * (i+1)) % 11;
 	return weights;
 }
 
 static uint* init_values(){
 	uint *values = new uint[N_OF_ITEMS];
 	for(size_t i = 0; i < N_OF_ITEMS; i++)
-		values[i] = i;
+		values[i] = (83 * (i+1)) % 41;
 	return values;
 }
 
@@ -125,8 +125,17 @@ Chromosome find_best(vector <Chromosome> &population){
 	return best;
 }
 
+Chromosome find_worst(vector <Chromosome> &population){
+	Chromosome worst = population.front();
+	for(auto itr = population.begin() + 1; itr!=population.end(); itr++){
+		if((worst > *itr || worst.fitness() == -1) && itr->fitness() != -1)
+			worst = *itr;
+	}
+	return worst;
+}
+
 int   Chromosome::mutation_prob = 2;
-uint  Chromosome::capacity = 2000;
+uint  Chromosome::capacity = 800;
 uint *Chromosome::weights  = init_weights();
 uint *Chromosome::values   = init_values();
 
@@ -136,15 +145,30 @@ int main(){
 	vector <Chromosome> population(population_size);
 
 	Chromosome best = find_best(population);
+
 	uint timer;
 	uint n_of_best_gen = 0;
 	uint improved_generations_ago = 0;
 	for(timer = 0; improved_generations_ago < 25 ;timer++){
+		double average = 0;
+		uint n_ignore = 0;
 		next_generation(population);
-		for(uint i = 0; i < population_size; i++)
+
+		for(uint i = 0; i < population_size; i++){
 			population[i].mutate();
+			if(population[i].fitness() > -1)
+				average+=population[i].fitness();
+			else
+				n_ignore++;
+		}
 
 		Chromosome next_generation_best = find_best(population);
+		Chromosome worst = find_worst(population);
+		average /= population_size - n_ignore;
+
+		cout << timer << "\t" << next_generation_best.fitness() << "\t"
+				<< average <<"\t"<< worst.fitness() << endl;
+
 		if(next_generation_best > best){
 			best = next_generation_best;
 			improved_generations_ago = 0;
@@ -155,11 +179,11 @@ int main(){
 	}
 
 	
-	for(size_t i = 0; i < population_size; i++)
-		population[i].print();
+	// for(size_t i = 0; i < population_size; i++)
+	// 	population[i].print();
 
-	cout << n_of_best_gen << endl;
-	best.print();
+	// cout << n_of_best_gen << endl;
+	// best.print();
 
 	delete[] Chromosome::weights;
 	delete[] Chromosome::values;

@@ -1,1 +1,4 @@
 knapsack.o
+knapsack_dynamic.o
+knapsack.data
+prsentation/*
