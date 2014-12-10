@@ -2,10 +2,13 @@
 #include <vector>
 #include <bitset>
 #include <tuple>
+#include <time.h>
 
 #define N_OF_ITEMS 300
 
 using namespace std;
+
+typedef unsigned int uint;
 
 static int    crossover_prob = 70;
 static size_t population_size = 500;
@@ -140,7 +143,18 @@ uint *Chromosome::weights  = init_weights();
 uint *Chromosome::values   = init_values();
 
 
+void Cataclysm(vector<Chromosome>& population)
+{
+	Chromosome best = find_best(population);
+	population.clear();
+	vector<Chromosome> newPopulation(population_size);
+	newPopulation[0] = best;
+	population = newPopulation;
+}
+
+
 int main(){
+
 	srand(time(NULL));
 	vector <Chromosome> population(population_size);
 
@@ -148,8 +162,11 @@ int main(){
 
 	uint timer;
 	uint n_of_best_gen = 0;
-	uint improved_generations_ago = 0;
-	for(timer = 0; improved_generations_ago < 25 ;timer++){
+
+	int cataclysm_times = 25;
+	int cataclysm_countdown = cataclysm_times;
+
+	for (timer = 0; cataclysm_times < 300; timer++){
 		double average = 0;
 		uint n_ignore = 0;
 		next_generation(population);
@@ -167,15 +184,25 @@ int main(){
 		average /= population_size - n_ignore;
 
 		cout << timer << "\t" << next_generation_best.fitness() << "\t"
-				<< average <<"\t"<< worst.fitness() << endl;
+				<< average <<"\t"<< worst.fitness()<<"\t"<<cataclysm_countdown << endl;
 
 		if(next_generation_best > best){
 			best = next_generation_best;
-			improved_generations_ago = 0;
+			cataclysm_countdown = cataclysm_times;
 			n_of_best_gen = timer;
 		}
 		else
-			improved_generations_ago++;
+			cataclysm_countdown--;
+
+
+		if (cataclysm_countdown <0 )
+		{
+			cataclysm_times += timer;
+			cataclysm_countdown = cataclysm_times;
+			cout << "Cataclysm! Survive :" << best.fitness() << endl;
+			Cataclysm(population);
+		}
+
 	}
 
 	
